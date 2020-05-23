@@ -132,7 +132,7 @@ scale_poc=# create schema if not exists datasync;
 
 ---------
 
-##Note
+## Note
 
 * If you already have postgres installed, revisit the above steps to create database (scale_poc), schema (datasync), user (postgres) and password (admin) which aligns with [application.properties](/src/main/resources/application.properties)
 
