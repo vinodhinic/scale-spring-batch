@@ -155,3 +155,21 @@ scale_poc=# create schema if not exists datasync;
     - Total jobs present = 4
     - So you can run this app twice or more to observe the behavior
     - Change the token to 1 or 3 to test for other cases too.
+
+## Monitoring story - Pending
+
+Where can things go wrong?
+* Every job configured should have locks possessed by some instance.
+
+* Note that once the lock is acquired, the heart beat is sent via a background thread. So possessing lock != active jobs. What else should we ensure to say our jobs are healthy?
+   * the scheduler thread running per job should be active AND executing jobs IF the jobs are not paused.
+
+Approach :
+
+* One is self monitoring. i.e. every instance checks that there are job executions in the batch metadata for the jobs it acquired locks for.
+    * The "how" part is pretty simple. You know the status - paused/unpaused. If the job is not paused, check the schedule and compare with the last job execution for that job
+    
+* Another is global monitoring - i.e. there is one exclusive job run by one or more instances (which can in turn be configured as a job with a lock assigned - eg: monitoring-1 and monitoring-2 each running at different intervals)
+    * This checks that locks for **all** datasets are possessed by some instance.
+    * How? simply by trying to acquiring lock for all jobs one by one. If this monitoring job can acquire lock, it means that it is idle.
+    * To do this, we need to ensure that the lock client used by this check is different - i.e. lease duration should be lower and no automatic heart beats. 
