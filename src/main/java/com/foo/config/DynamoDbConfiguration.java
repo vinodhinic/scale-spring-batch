@@ -51,7 +51,7 @@ public class DynamoDbConfiguration {
         } catch (final UnknownHostException e) {
             ownerName = UUID.randomUUID().toString();
         }
-
+        LOGGER.info("OwnerName : {}", ownerName);
         AmazonDynamoDBLockClientOptions.AmazonDynamoDBLockClientOptionsBuilder builder =
                 AmazonDynamoDBLockClientOptions.builder(dynamoDB, tableName)
                         .withPartitionKeyName(partitionKey)

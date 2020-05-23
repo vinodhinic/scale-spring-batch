@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
-import org.springframework.transaction.annotation.Isolation;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -142,7 +141,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer implements Applic
 
     @Bean("jobSyncRunnableBeanFactory")
     public Function<String, JobSyncRunnable> jobSyncRunnableBeanFactory() {
-        return jobName -> jobSyncRunnable(jobName);
+        return this::jobSyncRunnable;
     }
 
     @Bean
@@ -190,13 +189,16 @@ public class BatchConfiguration extends DefaultBatchConfigurer implements Applic
                 ).build();
     }
 
+    @Autowired
+    private GlobalJobMonitor globalJobMonitor;
+
     @Bean("monitoringJob")
     public Job monitoringJob() {
         return jobBuilderFactory.get(MONITORING_JOB)
                 .incrementer(new RunIdIncrementer())
                 .start(stepBuilderFactory.get("monitoring-ETL")
                         .tasklet((contribution, chunkContext) -> {
-                            LOGGER.info("monitoring job is running");
+                            globalJobMonitor.run();
                             return RepeatStatus.FINISHED;
                         }).listener(chunkListener)
                         .build()
