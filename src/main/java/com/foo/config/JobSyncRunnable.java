@@ -44,7 +44,7 @@ public class JobSyncRunnable implements Runnable {
     // TODO: How about 2 kinds of locks? one to assign jobs to instances and another to acquire before each run for that job within that instance?
     //  Then we need to ensure trade-job-owner-lock and trade-run-lock are possessed by the same owner. Nah.
     // TODO: How about tracking the owner at the job execution? that way, when you are checking isLastJobExecutionStillRunning, if the last job execution is triggered by this.owner, it is okay to wait.
-    //  else assume that it is abandoned and cleanUpAbandonedJobs() -> I am leaning towards this approch since it is cleaner than the one implemented here.
+    //  else assume that it is abandoned and cleanUpAbandonedJobs() -> I am leaning towards this approach since it is cleaner than the one implemented here.
     @Override
     public void run() {
         try {

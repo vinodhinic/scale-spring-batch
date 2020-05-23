@@ -2,18 +2,12 @@ package com.foo.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +40,7 @@ public class SyncScheduler {
         int count = 1;
         LOGGER.info("With {} try, acquired {} locks for {} ", count, acquiredLocks.size(), acquiredLocks);
 
-        // We need to have rolling upgrades, else this whole concept of acquiring locks at start-up will never work. That too, maxSurge should be always set to 0
+        // We need to have rolling updates, else this whole concept of acquiring locks at start-up will never work. That too, maxSurge should be always set to 0
         if(acquiredLocks.size() != tokens) {
             while (acquiredLocks.size() < tokens && count < 3) {
                 allJobs.removeAll(acquiredLocks);
