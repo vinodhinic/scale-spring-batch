@@ -76,8 +76,7 @@ public class DynamoDBJobCoordinator {
     }
 
     public void unregisterJob(String jobName) {
-
-        LockItem lockItem = jobNameToHeldLockMap.get(jobName);
+        LockItem lockItem = jobNameToHeldLockMap.remove(jobName);
         if (lockItem == null) {
             LOGGER.warn(
                     "LockItem was null for {}. Someone unregistered the Job before this call, which should never happen",
@@ -98,8 +97,6 @@ public class DynamoDBJobCoordinator {
                         lockItem.getRecordVersionNumber());
             }
         }
-        jobNameToHeldLockMap.remove(jobName);
-
     }
 
     @PreDestroy

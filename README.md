@@ -13,7 +13,48 @@ To scale this ETL application, i.e. set `replica` to more than 1, this applicati
 - During start-up, each instance uses dynamo-db-lock-client to acquire X locks for jobs and initializes fixedDelay scheduler these jobs
 - For this to work, `rollingUpdate` deployment should be used with `maxSurge` set to 0. i.e. only when you bring down the existing instance, new instance can acquire some locks
 
-Refer to the documentation [here](http://wiki.ia55.net/display/TECHDOCS/Distributed+ETL+-+V1)  
+## Questionnaire 
+This ETL application does etl processing for various datasets. We aim to scale at dataset level. In spring batch world, these datasets are just jobs.
+
+### This deployment should be stateless. so how does the replica know which job(s) that it should be initialized with?   
+ Every instance will attempt to acquire a lock for each job and initializes itself for whatever jobs it was able to acquire the lock for.
+ 
+### What if one particular instance gets hold of all the locks?
+ We will assign tokens to each instance. If there are 2 tokens per instance, guaranteed the load is distributed.
+ 
+### What if one particular instance gets hold of 2 datasets that are heavy?
+ Add another dimension to the datasets configured - S/M/L. And define the token at that dimension. So you can configure this ETL application to run 2 S, 1 M and 1L.
+ 
+### What if an instance has too many free tokens and no datasets to take up?
+ If an instances is configured to run for 2 S, 1 M and 1 L, and was able to only acquire a dataset which is L, as long as there are no more datasets left to pick, 
+ it can proceed to run for that single dataset.
+
+### What if, collectively tokens are less than the datasets?
+Deployment should be configured with sufficient tokens and replicas so that this does not happen.
+Note that this should be done at dataset size level (refer below). Important to note that the same cpu and memory configuration applies for all replicas.
+
+![scaled horizontally](docs/image2020-5-23_2-43-9.png)
+
+
+![scaled vertically](docs/image2020-5-23_2-43-22.png)
+
+### But How can we prevent that?
+ Every instance can run a scheduled monitoring job that makes sure that locks for all datasets are held by some instance.
+ 
+### So if every instance is running monitoring job, wouldn't that put too much pressure on our lock table in dynamo?
+Not every instance need to run this monitoring job scheduler. You can even configure "monitoring job lock" and make sure only couple of instances are running this check with 
+different schedule. For Example : "Monitoring-job-lock-1" runs every 10 seconds. "Monitoring-job-lock-2" runs every 1 minute.
+
+### What if this monitoring job lock couldn't be held or the instances running this job dies?
+- Push a ping to datadog every time this monitoring check happens. If datadog didn't receive a ping in last 5 mins, radar alert can be raised.
+- K8 already ensures that the number of replicas is met. So the only case where dataset locks are sitting idle, is when you do not have enough replicas. 
+Our monitoring will catch that and we can increase the replica to meet the demand.
+
+### Is acquiring this lock a one-time thing at the start-up?
+No. We continue to renew the locks at each critical checkpoints. This would still handle network partition cases. And with the monitoring jobs, this is even more easy to catch these cases.
+
+### All instances are going to share the same postgres. Would it be a bottleneck?
+Might be. Do data-growth estimation.
 
 ## Installing Postgres
 

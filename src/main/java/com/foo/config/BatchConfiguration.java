@@ -36,7 +36,11 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Configuration("batchConfiguration")
 public class BatchConfiguration extends DefaultBatchConfigurer implements ApplicationContextAware {
-
+    /* TODO: Make sure web server does not get initialized unless flyway migration succeeds.
+        Makes readiness probe solid. i.e. do not direct any http request until the application is ready.
+        When the application is ready? - when the flyway migration is done. But currently web-server and
+        flyway-migration initialization are happening independently.
+    */
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchConfiguration.class);
     private static final String MONITORING_JOB = "monitoring-job";
     private static final String PUBLISHER_JOB = "publisher-job";
